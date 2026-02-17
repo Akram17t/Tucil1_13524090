@@ -26,7 +26,6 @@ void fungsi(int x){
         solusi = cek();
         if (solusi == true) { printgrid(); return; }
 
-        // Live update setiap 50ms
         auto now = chrono::steady_clock::now();
         if (chrono::duration_cast<chrono::milliseconds>(now - lastUpdate).count() >= 50) {
             lastUpdate = now;
@@ -117,11 +116,6 @@ int main()
   
     iterasi = 0;
     solusi = false;
-
-    // Emit total permutations (n!) ke stderr
-    long long total = 1;
-    for (int i = 1; i <= n; i++) total *= i;
-    cerr << "TOTAL:" << total << endl;
 
     fungsi(0);
     

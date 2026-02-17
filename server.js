@@ -4,7 +4,6 @@ var spawn = require('child_process').spawn;
 
 var app = express();
 
-// Serve file statis (index.html, gambar, dll) dari folder ini
 app.use(express.static(__dirname));
 
 // ==================== FUNGSI HELPER ====================
@@ -102,10 +101,8 @@ function processLine(line, state, send) {
   }
 }
 
-// ==================== ROUTE SSE ====================
 
 app.get('/solve-live', function (req, res) {
-  // Set header untuk Server-Sent Events
   res.set({
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
@@ -117,7 +114,6 @@ app.get('/solve-live', function (req, res) {
     res.write('data: ' + JSON.stringify(payload) + '\n\n');
   }
 
-  // Parse input grid dari query string
   var rawGrid = req.query.grid;
   var parsed = parseGridInput(rawGrid);
   if (!parsed.ok) {
@@ -129,7 +125,6 @@ app.get('/solve-live', function (req, res) {
   var rows = parsed.rows;
   var n = parsed.n;
 
-  // Jalankan solver C++
   var exe = path.join(__dirname, 'output', 'main.exe');
   var proc = spawn(exe, [], { windowsHide: true });
   proc.stdin.end(rows.join('\n'));
@@ -172,13 +167,10 @@ app.get('/solve-live', function (req, res) {
     res.end();
   });
 
-  // Kalau client disconnect, kill solver
   req.on('close', function () {
     if (!proc.killed) proc.kill();
   });
 });
-
-// ==================== START SERVER ====================
 
 app.listen(3000, function () {
   console.log('Server: http://localhost:3000');

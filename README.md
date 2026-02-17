@@ -1,7 +1,7 @@
 # Queens Solver
 
 ## Deskripsi Program
-Program solver N-Queens dengan algoritma brute-force yang dilengkapi visualisasi web real-time. Program menerima grid NxN dengan constraint pewarnaan, lalu mencari penempatan N queens sehingga tidak ada dua queens pada warna yang sama, baris yang sama, kolom yang sama, atau bersebelahan (horizontal/vertikal/diagonal). Solver C++ menggunakan permutasi dengan array `col[]` dan validasi constraint pada setiap konfigurasi.
+Program solver N-Queens dengan algoritma brute-force dengan bahasa c++ yang dilengkapi visualisasi website real-time sederhana. Program menerima grid NxN dengan constraint pewarnaan, lalu mencari penempatan N queens sehingga tidak ada dua queens pada warna yang sama, baris yang sama, kolom yang sama, atau bersebelahan (horizontal/vertikal/diagonal).
 
 ## Requirements
 - **C++ Compiler**: MinGW g++ atau compiler C++ lainnya
