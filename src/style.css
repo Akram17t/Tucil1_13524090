@@ -1,0 +1,132 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f1f1f1;
+  padding: 24px;
+}
+
+h1 {
+  text-align: center;
+  margin: 0 0 20px;
+}
+
+.wrap {
+  max-width: 980px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.box {
+  background: #fff;
+  border: 2px solid #1e1e1e;
+  padding: 14px;
+}
+
+.ttl {
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+textarea {
+  width: 95%;
+  height: 180px;
+  border: 1px solid #909090;
+  padding: 10px;
+  resize: none;
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+button {
+  margin-top: 10px;
+  background: #1f1f1f;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #343434;
+}
+
+#board {
+  min-height: 332px;
+  border: 3px solid #1b1b1b;
+  display: grid;
+  place-content: center;
+  padding: 8px;
+  background: #fff;
+}
+
+.grid {
+  display: grid;
+}
+
+.cell {
+  width: 48px;
+  height: 48px;
+  border: 1px solid #333;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+}
+
+.cell img {
+  width: 30px;
+  height: 30px;
+}
+
+#error {
+  min-height: 18px;
+  margin-top: 8px;
+  color: #b00020;
+  font-size: 12px;
+}
+
+#meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #2a2a2a;
+}
+
+#iter {
+  margin-top: 8px;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: bold;
+  color: #2a2a2a;
+}
+
+.file-controls {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.file-controls input[type="file"] {
+  font-size: 12px;
+}
+
+.btn-download {
+  background: #006400;
+}
+
+.btn-download:hover {
+  background: #008000;
+}
+
+#boardStatus {
+  text-align: center;
+  font-size: 11px;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 4px;
+  min-height: 16px;
+}

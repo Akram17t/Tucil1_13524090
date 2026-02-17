@@ -1,0 +1,14 @@
+Test Case 3 (9x9):
+Input:
+AAABBCCCD
+ABBBBCECD
+ABBBDCECD
+AAABDCCCD
+BBBBDDDDD
+FGGGDDHDD
+FGIGDDHDD
+FGIGDDHDD
+FGGGDDHHH
+
+Output:
+Refer to contoh3.png for visualization

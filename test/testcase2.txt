@@ -1,0 +1,10 @@
+Test Case 2 (5x5):
+Input:
+AAABB
+AAABB
+CCCDD
+CCCDD
+CCCDD
+
+Output: Tidak Ada Solusi Yang Memenuhi
+

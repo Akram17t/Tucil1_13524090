@@ -1,55 +1,55 @@
-# Queens Solver
+﻿# N-Queens Solver dengan Pewarnaan
 
-## Deskripsi Program
-Program solver N-Queens dengan algoritma brute-force dengan bahasa c++ yang dilengkapi visualisasi website real-time sederhana. Program menerima grid NxN dengan constraint pewarnaan, lalu mencari penempatan N queens sehingga tidak ada dua queens pada warna yang sama, baris yang sama, kolom yang sama, atau bersebelahan (horizontal/vertikal/diagonal).
+## a. Penjelasan Program
 
-## Requirements
-- **C++ Compiler**: MinGW g++ atau compiler C++ lainnya
-- **Node.js**: Versi 14 atau lebih baru
-- **npm**: Package manager untuk Node.js
+Program ini mengimplementasikan algoritma brute-force backtracking untuk menyelesaikan masalah N-Queens dengan constraint pewarnaan tambahan. Output ditampilkan pada web interface dengan visualisasi real-time berikut update board dalam interval 50ms. Solver ditulis dalam C++ dan dijalankan melalui Express.js backend.
 
-## Instalasi
-1. Clone repository ini
-2. Install dependencies Node.js:
-   ```bash
-   npm install
-   ```
+## b. Requirement dan Instalasi
 
-## Cara Kompilasi
-Compile program C++ solver dengan perintah:
+**Requirements:**
+- Node.js (v14+)
+- Express.js 4.x
+- g++ compiler (MinGW di Windows, gcc/clang di Linux/Mac)
+
+**Instalasi:**
 ```bash
-g++ -Wall -Wextra -O2 main.cpp -o output/main.exe
+cd src
+npm install
 ```
 
-Atau di Linux/Mac:
+## c. Cara Mengkompilasi
+
+Jalankan dari root directory:
+
+**Windows:**
 ```bash
-g++ -Wall -Wextra -O2 main.cpp -o output/main
+g++ -Wall -Wextra -O2 src/main.cpp -o bin/main.exe
 ```
 
-## Cara Menjalankan
-1. Pastikan solver C++ sudah dikompilasi (ada file `output/main.exe`)
-2. Start server:
+**Linux/Mac:**
+```bash
+g++ -Wall -Wextra -O2 src/main.cpp -o bin/main
+```
+
+## d. Cara Menjalankan dan Menggunakan
+
+1. Compile program terlebih dahulu (lihat bagian c)
+2. Jalankan server dari folder src:
    ```bash
+   cd src
    npm start
    ```
-3. Buka browser dan akses: **http://localhost:3000**
-4. Masukkan grid NxN di textarea
-5. Klik tombol **Solve**
-6. Hasil dan visualisasi proses akan ditampilkan secara real-time
+3. Buka browser ke **http://localhost:3000**
+4. Masukkan grid NxN (format: baris per baris, karakter A-Z):
+   ```
+   AAB
+   CBB
+   CCA
+   ```
+5. Klik tombol "Solve" untuk menjalankan solver
+6. Lihat visualisasi board yang terupdate secara real-time
+7. Download hasil (PNG atau TXT) setelah selesai
 
-## Struktur File
-```
-.
-├── main.cpp                 # Solver C++ brute-force
-├── server.js                # Express.js server dengan SSE
-├── index.html               # Frontend web UI
-├── package.json             # Node.js dependencies
-├── output/
-│   └── main.exe             # Binary hasil kompilasi
-└── .gitignore               # Git ignore rules
-```
+---
 
-## Author
-**Nashiruddin Akram**  
-NIM: 13524090  
-Teknik Informatika ITB
+**Nashiruddin Akram** (13524090) | Teknik Informatika ITB

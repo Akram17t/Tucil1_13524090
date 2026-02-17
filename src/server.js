@@ -5,6 +5,9 @@ var spawn = require('child_process').spawn;
 var app = express();
 
 app.use(express.static(__dirname));
+app.get('/', function(req, res) {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // ==================== FUNGSI HELPER ====================
 function parseGridInput(rawGrid) {
@@ -77,7 +80,7 @@ app.get('/solve-live', function(req, res) {
   var parsed = parseGridInput(req.query.grid);
   if (!parsed.ok) { send({ type: 'error', error: parsed.error }); res.end(); return; }
 
-  var proc = spawn(path.join(__dirname, 'output', 'main.exe'), [], { windowsHide: true });
+  var proc = spawn(path.join(__dirname, '..', 'bin', 'main.exe'), [], { windowsHide: true });
   proc.stdin.end(parsed.rows.join('\n'));
 
   var stdout = '', stderrBuf = '';
