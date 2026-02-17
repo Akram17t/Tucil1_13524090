@@ -5,7 +5,6 @@ using namespace std;
 char grid[100][100];
 long long n, iterasi, waktu;
 bool ada[100][100], solusi, frek[26], col[100];
-string alasan;
 auto lastUpdate = chrono::steady_clock::now();
 bool cek();
 
@@ -20,33 +19,36 @@ void printgrid(){
 }
 
 void fungsi(int x){
+    auto now = chrono::steady_clock::now();
+    if (chrono::duration_cast<chrono::milliseconds>(now - lastUpdate).count() >= 50) {
+        lastUpdate = now;
+        string line = "ITER:" + to_string(iterasi) + ":";
+        for (int i = 0; i < n; i++){
+            if (i > 0) line += "|";
+            for (int j = 0; j < n; j++){
+                if (ada[i][j]) line += "#";
+                else line += grid[i][j];
+            }
+        }
+        line += "\n";
+        fwrite(line.c_str(), 1, line.size(), stderr);
+        fflush(stderr);
+    }
+
     if (x == n){
         iterasi++;
 
         solusi = cek();
-        if (solusi == true) { printgrid(); return; }
-
-        auto now = chrono::steady_clock::now();
-        if (chrono::duration_cast<chrono::milliseconds>(now - lastUpdate).count() >= 50) {
-            lastUpdate = now;
-            cerr << "Banyak kasus yang ditinjau: " << iterasi << " kasus" << endl;
-            cerr << "SNAP:";
-            for (int i = 0; i < n; i++){
-                if (i > 0) cerr << "|";
-                for (int j = 0; j < n; j++){
-                    if (ada[i][j]) cerr << "#";
-                    else cerr << grid[i][j];
-                }
-            }
-            cerr << endl;
-            cerr << "REASON:" << alasan << endl;
+        if (solusi == true) { 
+            printgrid(); 
+            return; 
         }
         return;
     }
 
     for (int i = 0; i < n; i++){
         if (solusi) return;
-        if (col[i]) continue;
+        if (col[i]) continue; // agar tidak ada queen di kolom yg sama (optimasi agar kompleksitas n! bukan n^2)
 
         ada[x][i] = true;
         col[i] = true;
@@ -60,15 +62,17 @@ void fungsi(int x){
 bool cek(){
     for (int x = 0; x < n; x++){
         int y = -1;
-        for (int j = 0; j < n; j++)
-            if (ada[x][j]){ y = j; break; }
-        if (y == -1) return false;
-
+        for (int j = 0; j < n; j++){ // y -> ambil kolom yg ada queen nya
+            if (ada[x][j]){ 
+                y = j; 
+                break; 
+            }
+        }
         char warna = grid[x][y];
         for (int i = 0; i < x; i++){
             for (int j = 0; j < n; j++){
-                if (ada[i][j] && (warna == grid[i][j] || (abs(x-i) <= 1 && abs(y-j) <= 1))){
-                    alasan = to_string(x) + "," + to_string(y) + "," + to_string(i) + "," + to_string(j);
+                // Jika ada warna sama atau Ada tetangga baik diagonal maupun berbatasan langsung
+                if (ada[i][j] && (warna == grid[i][j] || (abs(x-i) <= 1 && abs(y-j) <= 1))){ 
                     return false;
                 }
             }
@@ -98,6 +102,7 @@ int main()
     
     auto mulai = chrono::high_resolution_clock::now();
 
+    // cek jumlah warna
     memset(frek, 0, sizeof(frek));
     int cnt = 0;
     for (int i = 0; i < n; i++){

@@ -7,137 +7,85 @@ var app = express();
 app.use(express.static(__dirname));
 
 // ==================== FUNGSI HELPER ====================
-
 function parseGridInput(rawGrid) {
   var grid = String(rawGrid || '').trim();
   if (!grid) return { ok: false, error: 'Input grid kosong' };
-
   var lines = grid.split(/\r?\n/);
   var rows = [];
   for (var i = 0; i < lines.length; i++) {
-    var trimmed = lines[i].trim();
-    if (trimmed !== '') rows.push(trimmed);
+    var t = lines[i].trim();
+    if (t) rows.push(t);
   }
-
   var n = rows.length;
   if (n === 0) return { ok: false, error: 'Grid harus NxN' };
-
   for (var i = 0; i < rows.length; i++) {
     if (rows[i].length !== n) return { ok: false, error: 'Grid harus NxN' };
   }
-
   return { ok: true, rows: rows, n: n };
 }
 
 function parseSolverOutput(output, n) {
-  var lines = output.split(/\r?\n/);
-  var cleanLines = [];
+  var lines = output.split(/\r?\n/).filter(function(l) { return l.trim(); });
+  var timeMs = 0, cases = 0, noSolution = false, solutionRows = [];
   for (var i = 0; i < lines.length; i++) {
-    var line = lines[i].trimRight();
-    if (line !== '') cleanLines.push(line);
-  }
-
-  var timeMs = 0;
-  for (var i = 0; i < cleanLines.length; i++) {
-    if (cleanLines[i].indexOf('Waktu pencarian:') !== -1) {
-      var match = cleanLines[i].match(/\d+/);
-      if (match) timeMs = Number(match[0]);
-      break;
+    var line = lines[i].trim();
+    if (line.indexOf('Waktu pencarian:') !== -1) {
+      var m = line.match(/\d+/);
+      if (m) timeMs = Number(m[0]);
+    }
+    if (line.indexOf('Banyak kasus yang ditinjau:') !== -1) {
+      var m = line.match(/\d+/);
+      if (m) cases = Number(m[0]);
+    }
+    if (line.indexOf('Tidak Ada Solusi') !== -1) noSolution = true;
+    if (line.length === n && /^[A-Z#]+$/.test(line) && solutionRows.length < n) {
+      solutionRows.push(line);
     }
   }
-
-  var cases = 0;
-  for (var i = 0; i < cleanLines.length; i++) {
-    if (cleanLines[i].indexOf('Banyak kasus yang ditinjau:') !== -1) {
-      var match = cleanLines[i].match(/\d+/);
-      if (match) cases = Number(match[0]);
-      break;
-    }
-  }
-
-  var noSolution = false;
-  for (var i = 0; i < cleanLines.length; i++) {
-    if (cleanLines[i].indexOf('Tidak Ada Solusi') !== -1) {
-      noSolution = true;
-      break;
-    }
-  }
-
-  var solutionRows = [];
-  for (var i = 0; i < cleanLines.length; i++) {
-    if (cleanLines[i].length === n && /^[A-Z#]+$/.test(cleanLines[i])) {
-      solutionRows.push(cleanLines[i]);
-      if (solutionRows.length >= n) break;
-    }
-  }
-
-  var found = !noSolution && solutionRows.length === n;
-  return { found: found, rows: solutionRows, timeMs: timeMs, cases: cases };
+  return { found: !noSolution && solutionRows.length === n, rows: solutionRows, timeMs: timeMs, cases: cases };
 }
 
 function processLine(line, state, send) {
-  if (line.indexOf('TOTAL:') === 0) {
-    send({ type: 'total', total: Number(line.slice(6)) });
-
-  } else if (line.indexOf('SNAP:') === 0) {
-    state.lastSnap = line.slice(5).split('|');
-
-  } else if (line.indexOf('REASON:') === 0) {
-    var parts = line.slice(7).split(',');
-    var nums = [];
-    for (var i = 0; i < parts.length; i++) {
-      nums.push(Number(parts[i]));
+  if (line.indexOf('ITER:') === 0) {
+    var rest = line.slice(5);
+    var idx = rest.indexOf(':');
+    if (idx !== -1) {
+      var cases = Number(rest.slice(0, idx));
+      var rows = rest.slice(idx + 1).split('|');
+      state.lastCases = cases;
+      send({ type: 'snapshot', rows: rows, cases: cases });
     }
-    var err = [];
-    if (nums.length >= 4) {
-      err = [[nums[0], nums[1]], [nums[2], nums[3]]];
-    }
-    send({ type: 'snapshot', rows: state.lastSnap || [], cases: state.lastCases, err: err });
-
-  } else {
-    var match = line.match(/(\d+)/);
-    if (match) state.lastCases = Number(match[1]);
-    send({ type: 'progress', cases: state.lastCases });
   }
 }
 
 
-app.get('/solve-live', function (req, res) {
-  res.set({
+app.get('/solve-live', function(req, res) {
+  req.socket.setNoDelay(true);
+  res.writeHead(200, {
     'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive'
+    'Cache-Control': 'no-cache, no-transform',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no'
   });
-  res.flushHeaders();
+  res.write(': connected\n\n');
 
   function send(payload) {
     res.write('data: ' + JSON.stringify(payload) + '\n\n');
+    if (typeof res.flush === 'function') res.flush();
   }
 
-  var rawGrid = req.query.grid;
-  var parsed = parseGridInput(rawGrid);
-  if (!parsed.ok) {
-    send({ type: 'error', error: parsed.error });
-    res.end();
-    return;
-  }
+  var parsed = parseGridInput(req.query.grid);
+  if (!parsed.ok) { send({ type: 'error', error: parsed.error }); res.end(); return; }
 
-  var rows = parsed.rows;
-  var n = parsed.n;
+  var proc = spawn(path.join(__dirname, 'output', 'main.exe'), [], { windowsHide: true });
+  proc.stdin.end(parsed.rows.join('\n'));
 
-  var exe = path.join(__dirname, 'output', 'main.exe');
-  var proc = spawn(exe, [], { windowsHide: true });
-  proc.stdin.end(rows.join('\n'));
+  var stdout = '', stderrBuf = '';
+  var state = { lastCases: 0 };
 
-  var stdout = '';
-  var stderrBuf = '';
-  var state = { lastCases: 0, lastSnap: null };
+  proc.stdout.on('data', function(d) { stdout += d.toString(); });
 
-  proc.stdout.on('data', function (d) {
-    stdout += d.toString();
-  });
-
-  proc.stderr.on('data', function (d) {
+  proc.stderr.on('data', function(d) {
     stderrBuf += d.toString();
     var parts = stderrBuf.split(/\r?\n/);
     stderrBuf = parts.pop() || '';
@@ -147,31 +95,17 @@ app.get('/solve-live', function (req, res) {
     }
   });
 
-  proc.on('error', function () {
-    send({ type: 'error', error: 'main.exe tidak bisa dijalankan' });
-    res.end();
-  });
+  proc.on('error', function() { send({ type: 'error', error: 'main.exe tidak bisa dijalankan' }); res.end(); });
 
-  proc.on('close', function () {
+  proc.on('close', function() {
     var tail = stderrBuf.trim();
     if (tail) processLine(tail, state, send);
-
-    var result = parseSolverOutput(stdout, n);
-    send({
-      type: 'done',
-      found: result.found,
-      rows: result.rows,
-      timeMs: result.timeMs,
-      cases: result.cases
-    });
+    var result = parseSolverOutput(stdout, parsed.n);
+    send({ type: 'done', found: result.found, rows: result.rows, timeMs: result.timeMs, cases: result.cases });
     res.end();
   });
 
-  req.on('close', function () {
-    if (!proc.killed) proc.kill();
-  });
+  req.on('close', function() { if (!proc.killed) proc.kill(); });
 });
 
-app.listen(3000, function () {
-  console.log('Server: http://localhost:3000');
-});
+app.listen(3000, function() { console.log('Server berjalan di http://localhost:3000'); });
