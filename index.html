@@ -1,0 +1,186 @@
+﻿<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>QUEENS SOLVER</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f1f1f1; padding: 24px; }
+    h1 { text-align: center; margin: 0 0 20px; }
+    .wrap { max-width: 980px; margin: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .box { background: #fff; border: 2px solid #1e1e1e; padding: 14px; }
+    .ttl { text-align: center; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
+    textarea { width: 95%; height: 180px; border: 1px solid #909090; padding: 10px; resize: none; font-family: monospace; font-size: 14px; font-weight: bold; }
+    button { margin-top: 10px; background: #1f1f1f; color: #fff; border: none; padding: 8px 16px; cursor: pointer; }
+    button:hover { background: #343434; }
+    #board { min-height: 332px; border: 3px solid #1b1b1b; display: grid; place-content: center; padding: 8px; background: #fff; }
+    .grid { display: grid; }
+    .cell { width: 48px; height: 48px; border: 1px solid #333; display: grid; place-items: center; font-weight: bold; }
+    .cell img { width: 30px; height: 30px; }
+    #error { min-height: 18px; margin-top: 8px; color: #b00020; font-size: 12px; }
+    #meta { margin-top: 6px; font-size: 12px; color: #2a2a2a; }
+    #iter { margin-top: 8px; font-family: monospace; font-size: 12px; font-weight: bold; color: #2a2a2a; }
+    .snap { max-width: 980px; margin: 14px auto 0; background: #fff; border: 2px solid #1e1e1e; padding: 10px; }
+    .snap h3 { margin: 0 0 8px; font-size: 12px; }
+    #snapLog { max-height: 240px; overflow: auto; background: #f7f7f7; border: 1px solid #bbb; padding: 6px; }
+    #snapLog pre { margin: 0 0 8px; font-family: monospace; font-size: 11px; border-bottom: 1px dashed #ccc; padding-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <h1>QUEENS SOLVER</h1>
+  <div class="wrap">
+    <div class="box">
+      <div class="ttl">INPUT GRID</div>
+      <textarea id="input" placeholder="AAA&#10;ABA&#10;AAA"></textarea>
+      <button id="solveBtn">Solve</button>
+      <div id="error"></div>
+      <div id="meta"></div>
+      <div id="iter"></div>
+    </div>
+    <div class="box">
+      <div class="ttl">BOARD OUTPUT</div>
+      <div id="board">Hasil akan tampil di sini</div>
+    </div>
+  </div>
+  <div class="snap">
+    <h3>LIVE VISUALISASI PROSES BRUTE FORCE</h3>
+    <div id="snapLog"></div>
+  </div>
+
+  <script>
+    var crownImage = 'png-clipart-crown-silhouette-crown-logo-silhouette.png';
+    var eventSource = null;
+
+    function gambarPapan(rows) {
+      var n = rows.length;
+      var html = '';
+
+      for (var i = 0; i < n; i++) {
+        for (var j = 0; j < n; j++) {
+          var huruf = rows[i][j];
+          var warna = (huruf.charCodeAt(0) * 37) % 360;
+          var background = 'hsl(' + warna + ' 55% 78%)';
+
+          if (huruf === '#') {
+            html += '<div class="cell" style="background:' + background + '">';
+            html += '<img src="' + crownImage + '">';
+            html += '</div>';
+          } else {
+            html += '<div class="cell" style="background:' + background + '">';
+            html += huruf;
+            html += '</div>';
+          }
+        }
+      }
+
+      var board = document.getElementById('board');
+      board.innerHTML = '<div class="grid" style="grid-template-columns: repeat(' + n + ', 48px)">' + html + '</div>';
+    }
+
+    function tambahSnapshot(snapRows, kasus) {
+      var text = 'Kasus #' + kasus + '\n';
+      for (var i = 0; i < snapRows.length; i++) {
+        text += snapRows[i];
+        if (i < snapRows.length - 1) {
+          text += '\n';
+        }
+      }
+
+      var pre = document.createElement('pre');
+      pre.textContent = text;
+
+      var snapLog = document.getElementById('snapLog');
+      snapLog.appendChild(pre);
+
+      while (snapLog.children.length > 120) {
+        snapLog.removeChild(snapLog.firstChild);
+      }
+      snapLog.scrollTop = snapLog.scrollHeight;
+    }
+
+    document.getElementById('solveBtn').onclick = function () {
+      document.getElementById('error').textContent = '';
+      document.getElementById('meta').textContent = '';
+      document.getElementById('iter').textContent = '';
+      document.getElementById('snapLog').innerHTML = '';
+
+      var semuaBaris = document.getElementById('input').value.split('\n');
+      var rows = [];
+      for (var i = 0; i < semuaBaris.length; i++) {
+        var baris = semuaBaris[i].trim();
+        if (baris !== '') {
+          rows.push(baris);
+        }
+      }
+      var n = rows.length;
+
+      if (n === 0) {
+        document.getElementById('error').textContent = 'Input grid kosong';
+        return;
+      }
+
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].length !== n) {
+          document.getElementById('error').textContent = 'Grid harus NxN (baris = kolom)';
+          return;
+        }
+      }
+
+      if (eventSource) {
+        eventSource.close();
+      }
+
+      document.getElementById('solveBtn').disabled = true;
+
+      var url = '/solve-live?grid=' + encodeURIComponent(rows.join('\n'));
+      eventSource = new EventSource(url);
+      var sudahSelesai = false;
+
+      eventSource.onmessage = function (event) {
+        var data = JSON.parse(event.data);
+
+        if (data.type === 'snapshot') {
+          tambahSnapshot(data.rows, data.cases);
+        }
+
+        if (data.type === 'progress') {
+          document.getElementById('iter').textContent = 'Iterasi: ' + data.cases;
+        }
+
+        if (data.type === 'error') {
+          document.getElementById('error').textContent = data.error;
+          document.getElementById('solveBtn').disabled = false;
+          eventSource.close();
+          eventSource = null;
+        }
+
+        if (data.type === 'done') {
+          sudahSelesai = true;
+
+          if (data.found) {
+            gambarPapan(data.rows);
+          } else {
+            document.getElementById('board').textContent = 'Tidak Ada Solusi Yang Memenuhi';
+          }
+
+          document.getElementById('iter').textContent = 'Iterasi: ' + data.cases;
+          document.getElementById('meta').textContent = 'Waktu: ' + data.timeMs + ' ms | Kasus ditinjau: ' + data.cases;
+          document.getElementById('solveBtn').disabled = false;
+          eventSource.close();
+          eventSource = null;
+        }
+      };
+
+      eventSource.onerror = function () {
+        if (!sudahSelesai) {
+          document.getElementById('error').textContent = 'Koneksi ke server terputus';
+        }
+        document.getElementById('solveBtn').disabled = false;
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+      };
+    };
+  </script>
+</body>
+</html>
