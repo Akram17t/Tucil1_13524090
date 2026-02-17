@@ -1,10 +1,10 @@
 ﻿# N-Queens Solver dengan Pewarnaan
 
-## a. Penjelasan Program
+## Penjelasan Program
 
 Program ini mengimplementasikan algoritma brute-force backtracking untuk menyelesaikan masalah N-Queens dengan constraint pewarnaan tambahan. Output ditampilkan pada web interface dengan visualisasi real-time berikut update board dalam interval 50ms. Solver ditulis dalam C++ dan dijalankan melalui Express.js backend.
 
-## b. Requirement dan Instalasi
+## Requirement dan Instalasi
 
 **Requirements:**
 - Node.js (v14+)
@@ -17,7 +17,7 @@ cd src
 npm install
 ```
 
-## c. Cara Mengkompilasi
+## Cara Mengkompilasi
 
 Jalankan dari root directory:
 
@@ -31,7 +31,7 @@ g++ -Wall -Wextra -O2 src/main.cpp -o bin/main.exe
 g++ -Wall -Wextra -O2 src/main.cpp -o bin/main
 ```
 
-## d. Cara Menjalankan dan Menggunakan
+## Cara Menjalankan dan Menggunakan
 
 1. Compile program terlebih dahulu (lihat bagian c)
 2. Jalankan server dari folder src:
